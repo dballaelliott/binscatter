@@ -1,4 +1,6 @@
-*! version 7.02  24nov2013  Michael Stepner, stepner@mit.edu
+*!forked version 1.0 15jan2020  Dylan Balla-Elliott, dballaelliott@hbs.edu
+
+*!forked from: version 7.02  24nov2013  Michael Stepner, stepner@mit.edu
 
 /* CC0 license information:
 To the extent possible under law, the author has dedicated all copyright and related and neighboring rights
@@ -21,11 +23,13 @@ program define binscatter, eclass sortpreserve
 		COLors(string) MColors(string) LColors(string) Msymbols(string) ///
 		savegraph(string) savedata(string) replace ///
 		nofastxtile randvar(varname numeric) randcut(real 1) randn(integer -1) ///
-		/* LEGACY OPTIONS */ nbins(integer 20) create_xq x_q(varname numeric) symbols(string) method(string) unique(string) ///
+		/* LEGACY OPTIONS */ nbins(integer 20) create_xq x_q(varname numeric) symbols(string) method(string) unique(string) plot_ci ///
 		*]
 
 	set more off
 
+	/* !flag */
+	di as error "FORKED VERSION"
 	* Create convenient weight local
 	if ("`weight'"!="") local wt [`weight'`exp']
 	
@@ -130,6 +134,9 @@ program define binscatter, eclass sortpreserve
 			confirm new file `"`savedata'.do"'
 		}
 	}
+
+	/* use version 15.1 if we need to plot with transparency */
+	if "`plot_ci'" != "" version 15.1  
 
 	* Mark sample (reflects the if/in conditions, and includes only nonmissing observations)
 	marksample touse
@@ -461,7 +468,14 @@ program define binscatter, eclass sortpreserve
 			* store to matrix
 			if (`b'==1) {
 				tempname y`counter_depvar'_scatterpts
+				tempname y`counter_depvar'_loci
+				tempname y`counter_depvar'_hici
+
+				/*add confidence intervals */
 				matrix `y`counter_depvar'_scatterpts' = `xbin_means',r(means)
+				matrix `y`counter_depvar'_loci' = `xbin_means',r(loci)
+				matrix `y`counter_depvar'_hici' = `xbin_means',r(hici)
+
 			}
 			else {
 				* make matrices conformable before right appending			
@@ -469,6 +483,17 @@ program define binscatter, eclass sortpreserve
 				if (`rowdiff'==0) matrix `y`counter_depvar'_scatterpts' = `y`counter_depvar'_scatterpts',`xbin_means',r(means)
 				else if (`rowdiff'>0)  matrix `y`counter_depvar'_scatterpts' = `y`counter_depvar'_scatterpts', ( (`xbin_means',r(means)) \ J(`rowdiff',2,.) )
 				else /*(`rowdiff'<0)*/ matrix `y`counter_depvar'_scatterpts' = ( `y`counter_depvar'_scatterpts' \ J(-`rowdiff',colsof(`y`counter_depvar'_scatterpts'),.) ) ,`xbin_means',r(means)
+
+				/* append confidence intervals if by is used */
+				local rowdiff_lo=rowsof(`y`counter_depvar'_loci')-rowsof(`xbin_means')
+				if (`rowdiff_lo'==0) matrix `y`counter_depvar'_loci' = `y`counter_depvar'_loci',`xbin_means',r(loci)
+				else if (`rowdiff_lo'>0)  matrix `y`counter_depvar'_loci' = `y`counter_depvar'_loci', ( (`xbin_means',r(loci)) \ J(`rowdiff_lo',2,.) )
+				else /*(`rowdiff'<0)*/ matrix `y`counter_depvar'_loci' = ( `y`counter_depvar'_loci' \ J(-`rowdiff_lo',colsof(`y`counter_depvar'_loci'),.) ) ,`xbin_means',r(loci)
+
+				local rowdiff_hi=rowsof(`y`counter_depvar'_hici')-rowsof(`xbin_means')
+				if (`rowdiff_hi'==0) matrix `y`counter_depvar'_hici' = `y`counter_depvar'_hici',`xbin_means',r(hici)
+				else if (`rowdiff_hi'>0)  matrix `y`counter_depvar'_hici' = `y`counter_depvar'_hici', ( (`xbin_means',r(hici)) \ J(`rowdiff_hi',2,.) )
+				else /*(`rowdiff'<0)*/ matrix `y`counter_depvar'_hici' = ( `y`counter_depvar'_hici' \ J(-`rowdiff_hi',colsof(`y`counter_depvar'_hici'),.) ) ,`xbin_means',r(hici)
 			}
 		}
 	}
@@ -532,10 +557,17 @@ program define binscatter, eclass sortpreserve
 			local row=1
 			local xval=`y`counter_depvar'_scatterpts'[`row',`xind']
 			local yval=`y`counter_depvar'_scatterpts'[`row',`yind']
-			
+
+			local y_loci=`y`counter_depvar'_loci'[`row',`yind']
+			local y_hici=`y`counter_depvar'_hici'[`row',`yind']
+
 			if !missing(`xval',`yval') {
 				local ++counter_series
 				local scatters `scatters' (scatteri
+				/* local cis `cis' (scatteri */
+				local lo `lo' (scatteri 
+				local hi `hi' (scatteri
+
 				if ("`savedata'"!="") {
 					if ("`by'"=="") local savedata_scatters `savedata_scatters' (scatter `depvar' `x_var'
 					else local savedata_scatters `savedata_scatters' (scatter `depvar'_by`counter_by' `x_var'_by`counter_by'
@@ -548,22 +580,36 @@ program define binscatter, eclass sortpreserve
 			
 			while (`xval'!=. & `yval'!=.) {
 				local scatters `scatters' `yval' `xval'
-			
+				/* local cis `cis' `y_loci' `y_hici' `xval' */
+				local lo `lo' `y_loci' `xval' 
+				local hi `hi' `y_hici' `xval'
+
 				local ++row
 				local xval=`y`counter_depvar'_scatterpts'[`row',`xind']
 				local yval=`y`counter_depvar'_scatterpts'[`row',`yind']
+
+				local y_loci=`y`counter_depvar'_loci'[`row',`yind']
+				local y_hici=`y`counter_depvar'_hici'[`row',`yind']
 			}
 			
 			* Add options
 			local scatter_options `connect' mcolor(`: word `c' of `mcolors'') lcolor(`: word `c' of `lcolors'') `symbol_prefix'`: word `c' of `msymbols''`symbol_suffix'
 			local scatters `scatters', `scatter_options')
+
+			local ci_options  lcolor(`: word `c' of `mcolors''%75) lpattern(dash) recast(line)
+			local lo `lo' , `ci_options')
+			local hi `hi' , `ci_options')
+			/* local ci_options fcolor(`: word `c' of `mcolors''%30) lcolor(`: word `c' of `mcolors''%0) recast(rarea)
+			local cis `cis', `ci_options') */
+
 			if ("`savedata'"!="") local savedata_scatters `savedata_scatters', `scatter_options')
 		
 
 			* Add legend
 			if "`by'"=="" {
 				if (`ynum'==1) local legend_labels off
-				else local legend_labels `legend_labels' lab(`counter_series' `depvar')
+				else if "`plot_ci'" != "" local legend_labels `legend_labels' lab(`=3*`counter_series'' `depvar')
+				else /* no ci */  local legend_labels `legend_labels' lab(`counter_series' `depvar')
 			}
 			else {
 				if ("`bylabel'"=="") local byvalname=`byval'
@@ -571,8 +617,13 @@ program define binscatter, eclass sortpreserve
 					local byvalname `: label `bylabel' `byval''
 				}
 			
-				if (`ynum'==1) local legend_labels `legend_labels' lab(`counter_series' `byvarname'=`byvalname')
-				else local legend_labels `legend_labels' lab(`counter_series' `depvar': `byvarname'=`byvalname')
+				if (`ynum'==1){
+					if "`plot_ci'" != "" local legend_labels `legend_labels' lab(`counter_series' `byvarname'=`byvalname')
+					else  /* no ci */ local legend_labels `legend_labels' lab(`=3*`counter_series'' `byvarname'=`byvalname')
+				} 
+				else {
+					local legend_labels `legend_labels' lab(`counter_series' `depvar': `byvarname'=`byvalname')
+				}
 			}
 			if ("`by'"!="" | `ynum'>1) local order `order' `counter_series'
 			
@@ -655,10 +706,47 @@ program define binscatter, eclass sortpreserve
 	else local ytitle : subinstr local y_vars " " "; ", all
 
 	* Display graph
+	/* only plot cis if specified */
+	/** MORE FLEXIBLE VERSION **/
+	if  "`plot_ci'" != "" {
+		preserve 
+		clear 
+		local counter_depvar= 0 
+		local cis  
+		local ci_type (rcap  
+		local color = 0 
+
+		foreach v in `y_vars' {
+			local ++counter_depvar
+
+			svmat `y`counter_depvar'_loci', names("y`counter_depvar'_lo")
+			svmat `y`counter_depvar'_hici',  names("y`counter_depvar'_hi")
+			
+			local by_index = 1
+
+			foreach byval in `byvals' `noby'{
+				local cis `cis' `ci_type'
+
+				local y_index = 2*`by_index'
+				local x_index = `y_index' - 1 
+
+				local cis `cis'  y`counter_depvar'_lo`y_index' y`counter_depvar'_hi`y_index' y`counter_depvar'_hi`x_index', lcolor(`:word `++color' of `colors''%50))
+				local ++by_index 
+			}
+		}
+		local graphcmd twoway `cis' `scatters' `fits', graphregion(fcolor(white)) `xlines' xtitle(`x_var') ytitle(`ytitle') legend(`legend_labels' order(`order')) `options'
+		`graphcmd'
+
+		
+		restore  
+		 
+	}
+	else {
+	local cis 
 	local graphcmd twoway `scatters' `fits', graphregion(fcolor(white)) `xlines' xtitle(`x_var') ytitle(`ytitle') legend(`legend_labels' order(`order')) `options'
 	if ("`savedata'"!="") local savedata_graphcmd twoway `savedata_scatters' `fits', graphregion(fcolor(white)) `xlines' xtitle(`x_var') ytitle(`ytitle') legend(`legend_labels' order(`order')) `options'
 	`graphcmd'
-	
+	}
 	****** Save results ******
 	
 	* Save graph
@@ -808,22 +896,30 @@ program define means_in_boundaries, rclass
 	
 	local r=rowsof(`boundsmat')
 	matrix means=J(`r',1,.)
-	
+	matrix loci=J(`r',1,.)
+	matrix hici=J(`r',1,.)
+
 	if ("`medians'"!="medians") {
 		forvalues i=1/`r' {
-			sum `varlist' in `=`boundsmat'[`i',1]'/`=`boundsmat'[`i',2]' `wt', meanonly
-			matrix means[`i',1]=r(mean)
+			qui: reg `varlist' in `=`boundsmat'[`i',1]'/`=`boundsmat'[`i',2]' `wt', robust
+			matrix means[`i',1]	= 	_b[_cons]
+			matrix loci[`i',1]	=	_b[_cons]	-1.96 * _se[_cons]
+			matrix hici[`i',1]	= 	_b[_cons]	+1.96 * _se[_cons]
 		}
 	}
 	else {
 		forvalues i=1/`r' {
-			_pctile `varlist' in `=`boundsmat'[`i',1]'/`=`boundsmat'[`i',2]' `wt', percentiles(50)
-			matrix means[`i',1]=r(r1)
+			bsqreg `varlist'  in `=`boundsmat'[`i',1]'/`=`boundsmat'[`i',2]' `wt'
+			matrix means[`i',1]	= 	_b[_cons]
+			matrix loci[`i',1]	=	_b[_cons]  -1.96 * _se[_cons]
+			matrix hici[`i',1]	= 	_b[_cons]  +1.96 * _se[_cons]
 		}
 	}
 	
 	return clear
 	return matrix means=means
+	return matrix loci= loci
+	return matrix hici= hici
 
 end
 
