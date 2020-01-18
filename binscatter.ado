@@ -713,12 +713,11 @@ program define binscatter, eclass sortpreserve
 		clear 
 		local counter_depvar= 0 
 		local cis  
-		local ci_type (rcap  
+		local ci_type (rarea  
 		local color = 0 
 
 		foreach v in `y_vars' {
 			local ++counter_depvar
-
 			svmat `y`counter_depvar'_loci', names("y`counter_depvar'_lo")
 			svmat `y`counter_depvar'_hici',  names("y`counter_depvar'_hi")
 			
@@ -730,7 +729,7 @@ program define binscatter, eclass sortpreserve
 				local y_index = 2*`by_index'
 				local x_index = `y_index' - 1 
 
-				local cis `cis'  y`counter_depvar'_lo`y_index' y`counter_depvar'_hi`y_index' y`counter_depvar'_hi`x_index', lcolor(`:word `++color' of `colors''%50))
+				local cis `cis'  y`counter_depvar'_lo`y_index' y`counter_depvar'_hi`y_index' y`counter_depvar'_hi`x_index', fcolor(`:word `++color' of `colors''%30) lcolor(`:word `color' of `colors''%0))
 				local ++by_index 
 			}
 		}
