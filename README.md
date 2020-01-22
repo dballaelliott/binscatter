@@ -13,8 +13,8 @@ Technically, both options can be selected at the same time (though this doesn't 
 
 ### ci(bins)
 
-more info and examples 
+more info and examples coming soon... 
 
 ### ci(model)
 
-more info and examples
+more info and examples coming soon..
