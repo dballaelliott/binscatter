@@ -1,4 +1,4 @@
-*!forked version 1.0 15jan2020  Dylan Balla-Elliott, dballaelliott@hbs.edu
+*!forked version 1.0 21jan2020  Dylan Balla-Elliott, dballaelliott@hbs.edu
 
 *!forked from: version 7.02  24nov2013  Michael Stepner, stepner@mit.edu
 
@@ -23,14 +23,32 @@ program define binscatter, eclass sortpreserve
 		COLors(string) MColors(string) LColors(string) Msymbols(string) ///
 		savegraph(string) savedata(string) replace ///
 		nofastxtile randvar(varname numeric) randcut(real 1) randn(integer -1) ///
-		/* LEGACY OPTIONS */ nbins(integer 20) create_xq x_q(varname numeric) symbols(string) method(string) unique(string) plot_ci ///
+		/* LEGACY OPTIONS */ nbins(integer 20) create_xq x_q(varname numeric) ///
+		 symbols(string) method(string) unique(string) ci(string asis) vce(passthru) ///
 		*]
 
 	set more off
 
 	/* !flag */
 	di as error "FORKED VERSION"
-	* Create convenient weight local
+	// local env_seed = c(seed)
+	local bin_seed = 20021380
+
+ 	** parse CI options
+	local model_ci = strpos(`"`ci'"',"model") > 0 
+	local bin_ci = strpos(`"`ci'"',"bins") > 0 
+
+	local ci_input :subinstr local ci "model" ""
+	local ci_input :subinstr local ci_input "bins" ""
+
+	if "`ci_input'" == ""{
+		/* do nothing */ 
+		/*need to check this so it doesn't try to trim an empty string  */
+	 } 
+	else if trim("`ci_input'") != ""{
+		 di as error "`=trim(`ci_input')' not valid option for  " as input "ci"
+	}
+	** Create convenient weight local
 	if ("`weight'"!="") local wt [`weight'`exp']
 	
 	***** Begin legacy option compatibility code
@@ -136,7 +154,7 @@ program define binscatter, eclass sortpreserve
 	}
 
 	/* use version 15.1 if we need to plot with transparency */
-	if "`plot_ci'" != "" version 15.1  
+	if "`ci'" != "" version 15.0  
 
 	* Mark sample (reflects the if/in conditions, and includes only nonmissing observations)
 	marksample touse
@@ -230,8 +248,11 @@ program define binscatter, eclass sortpreserve
 		
 		* Create matrices to hold regression results
 		tempname e_b_temp
+
 		forvalues i=1/`ynum' {
 			tempname y`i'_coefs
+			tempname y`i'_vcv
+			tempname y`i'_b  
 		}
 		
 		* LOOP over by-vars
@@ -284,11 +305,13 @@ program define binscatter, eclass sortpreserve
 					}
 					
 					* perform regression
-					if ("`reg_verbosity'"=="quietly") capture reg `depvar' `x_r2' `x_r' `wt' if `conds'
-					else capture noisily reg `depvar' `x_r2' `x_r' `wt' if `conds'
+					if ("`reg_verbosity'"=="quietly") capture reghdfe `depvar' `x_r2' `x_r' `wt' if `conds', `vce' noabsorb
+					else capture noisily reghdfe `depvar' `x_r2' `x_r' `wt' if `conds', `vce' noabsorb
 					
 					* store results
-					if (_rc==0) matrix e_b_temp=e(b)
+					if (_rc==0){
+						matrix e_b_temp=e(b)
+					}
 					else if (_rc==2000) {
 						if ("`reg_verbosity'"=="quietly") di as error "no observations for one of the fit lines. add 'reportreg' for more info."
 						
@@ -300,7 +323,8 @@ program define binscatter, eclass sortpreserve
 						exit _rc
 					}
 					
-					* relabel matrix row			
+					* relabel matrix row	
+					/* maybe this will be helpful...  */
 					if ("`by'"!="") matrix roweq e_b_temp = "by`counter_by'"
 					if ("`rd'"!="") matrix rownames e_b_temp = "rd`counter_rd'"
 					else matrix rownames e_b_temp = "="
@@ -309,6 +333,12 @@ program define binscatter, eclass sortpreserve
 					if (`counter_by'==1 & `counter_rd'==1) matrix `y`counter_depvar'_coefs'=e_b_temp
 					else matrix `y`counter_depvar'_coefs'=`y`counter_depvar'_coefs' \ e_b_temp
 					
+					** save coefs and vcv 
+					if (`counter_by'==1 & `counter_rd'==1) matrix `y`counter_depvar'_b'= e(b)
+					else matrix `y`counter_depvar'_b'= `y`counter_depvar'_b' \ e(b)
+
+					if (`counter_by'==1 & `counter_rd'==1) matrix `y`counter_depvar'_vcv'= e(V)
+					else matrix `y`counter_depvar'_vcv'= `y`counter_depvar'_vcv' \ e(V)
 					* increment depvar counter
 					local ++counter_depvar
 				}
@@ -333,7 +363,8 @@ program define binscatter, eclass sortpreserve
 	}
 
 	******* Define the bins *******
-	
+	/* save time and don't cluster std errors of the mean estimates if we aren't going to use them */
+	if !`bin_ci' local vce ""
 	* Specify and/or create the xq var, as necessary
 	if "`xq'"=="" {
 
@@ -454,7 +485,7 @@ program define binscatter, eclass sortpreserve
 			matrix `xbin_means'=`xq_values'
 		}
 		else {
-			means_in_boundaries `x_r' `wt', bounds(`xq_boundaries') `medians'
+			means_in_boundaries `x_r' `wt', bounds(`xq_boundaries') `medians' `vce'
 			matrix `xbin_means'=r(means)
 		}
 
@@ -463,7 +494,7 @@ program define binscatter, eclass sortpreserve
 		foreach depvar of varlist `y_vars_r' {
 			local ++counter_depvar
 
-			means_in_boundaries `depvar' `wt', bounds(`xq_boundaries') `medians'
+			means_in_boundaries `depvar' `wt', bounds(`xq_boundaries') `medians' `vce'
 
 			* store to matrix
 			if (`b'==1) {
@@ -516,9 +547,10 @@ program define binscatter, eclass sortpreserve
 		if (`ynum'==1 & `bynum'==1 & "`linetype'"!="connect") local mcolors `: word 1 of `colors''
 		else local mcolors `colors'
 	}
-	if `"`lcolors'"'=="" {
+	if `"`lcolors'"'==`""' {
 		if (`ynum'==1 & `bynum'==1 & "`linetype'"!="connect") local lcolors `: word 2 of `colors''
 		else local lcolors `colors'
+		pause
 	}
 	local num_mcolor=wordcount(`"`mcolors'"')
 	local num_lcolor=wordcount(`"`lcolors'"')
@@ -608,7 +640,7 @@ program define binscatter, eclass sortpreserve
 			* Add legend
 			if "`by'"=="" {
 				if (`ynum'==1) local legend_labels off
-				else if "`plot_ci'" != "" local legend_labels `legend_labels' lab(`=3*`counter_series'' `depvar')
+				else if "`ci'" != "" local legend_labels `legend_labels' lab(`=2*`counter_series'' `depvar')
 				else /* no ci */  local legend_labels `legend_labels' lab(`counter_series' `depvar')
 			}
 			else {
@@ -618,7 +650,7 @@ program define binscatter, eclass sortpreserve
 				}
 			
 				if (`ynum'==1){
-					if "`plot_ci'" != "" local legend_labels `legend_labels' lab(`counter_series' `byvarname'=`byvalname')
+					if "`ci'" != "" local legend_labels `legend_labels' lab(`counter_series' `byvarname'=`byvalname')
 					else  /* no ci */ local legend_labels `legend_labels' lab(`=3*`counter_series'' `byvarname'=`byvalname')
 				} 
 				else {
@@ -632,17 +664,25 @@ program define binscatter, eclass sortpreserve
 	}
 	
 	*** Fit lines
-		
-	if inlist(`"`linetype'"',"lfit","qfit") {
 	
+
+	if inlist(`"`linetype'"',"lfit","qfit") {
+		if "`linetype'" == "lfit" local n_coefs 2 
+		else if  "`linetype'" == "qfit" local  n_coefs 3
 		* c indexes which color is to be used
 		local c=0
+
+		
 		
 		local rdnum=wordcount("`rd'")+1
 		
 		tempname fitline_bounds
 		if ("`rd'"=="") matrix `fitline_bounds'=.,.
 		else matrix `fitline_bounds'=.,`=subinstr("`rd'"," ",",",.)',.
+
+		forvalues i = 1/`ynum'{
+			tempname model_x`i' model_lo`i' model_hi`i'
+		}
 
 		* LOOP over by-vars
 		local counter_by=0
@@ -657,13 +697,15 @@ program define binscatter, eclass sortpreserve
 			*     note: each time we seek a coeff, it should be from row (rd_num)(counter_by-1)+counter_rd
 			local row0=( `rdnum' ) * (`counter_by' - 1)
 			
-			
 			* LOOP over y-vars
 			local counter_depvar=0
 			foreach depvar of varlist `y_vars_r' {
 				local ++counter_depvar
 				local ++c
 				
+
+				local model_obs = round(100/`rdnum')*`rdnum'
+
 				* Find lower and upper bounds for the fit line
 				matrix `fitline_bounds'[1,1]=`y`counter_depvar'_scatterpts'[1,`xind']
 				
@@ -676,8 +718,11 @@ program define binscatter, eclass sortpreserve
 				matrix `fitline_bounds'[1,`rdnum'+1]=`fitline_ub'
 		
 				* LOOP over rd intervals
+				tempname temp_x temp_lo temp_hi
+
 				forvalues counter_rd=1/`rdnum' {
-					
+					local vcv0 = (( `row0') + (`counter_rd' - 1 )) * `n_coefs' + 1
+
 					if (`"`linetype'"'=="lfit") {
 						local coef_quad=0
 						local coef_lin=`y`counter_depvar'_coefs'[`row0'+`counter_rd',1]
@@ -689,17 +734,109 @@ program define binscatter, eclass sortpreserve
 						local coef_cons=`y`counter_depvar'_coefs'[`row0'+`counter_rd',3]
 					}
 					
+
 					if !missing(`coef_quad',`coef_lin',`coef_cons') {
 						local leftbound=`fitline_bounds'[1,`counter_rd']
 						local rightbound=`fitline_bounds'[1,`counter_rd'+1]
+
+						if `model_ci'{
+							local xobs = round(100/`rdnum')
+							tempname coefs vcv 
+							
+							if `"`linetype'"'=="lfit"{
+								mat `coefs' = `y`counter_depvar'_coefs'[`row0'+`counter_rd',1],`y`counter_depvar'_coefs'[`row0'+`counter_rd',2]
+								mat `vcv' = `y`counter_depvar'_vcv'[`vcv0'..`=`vcv0'+1',1],`y`counter_depvar'_vcv'[`vcv0'..`=`vcv0'+1',2]
+							} 
+							else if (`"`linetype'"'=="qfit"){
+								mat `coefs' = `y`counter_depvar'_coefs'[`row0'+`counter_rd',1],`y`counter_depvar'_coefs'[`row0'+`counter_rd',2],`y`counter_depvar'_coefs'[`row0'+`counter_rd',3]
+								mat `vcv' = `y`counter_depvar'_vcv'[`vcv0'..`=`vcv0'+2',1],`y`counter_depvar'_vcv'[`vcv0'..`=`vcv0'+2',2],`y`counter_depvar'_vcv'[`vcv0'..`=`vcv0'+2',3]
+							}
+
+							model_bounds, cov(`vcv') means(`coefs') seed(`bin_seed') x_range(`leftbound' `rightbound') x_obs(`xobs') `=trim("`linetype'")'
+							
+							if `counter_rd' == 1{
+								matrix `temp_x'  = r(model_x)
+								matrix `temp_lo' = r(model_lo)
+								matrix `temp_hi' = r(model_hi)
+							}
+							else { // append them to bottom (make a long column)
+								matrix `temp_x'  = `temp_x' \ r(model_x)
+								matrix `temp_lo' = `temp_lo' \ r(model_lo)
+								matrix `temp_hi' = `temp_hi' \ r(model_hi)
+							}
+
+
+						}
+						
 					
 						local fits `fits' (function `coef_quad'*x^2+`coef_lin'*x+`coef_cons', range(`leftbound' `rightbound') lcolor(`: word `c' of `lcolors''))
 					}
+
 				}
+
+				if `model_ci'{
+					if `counter_by' == 1 {
+						matrix  `model_x`counter_depvar''  = `temp_x' 
+						matrix  `model_lo`counter_depvar'' = `temp_lo'
+						matrix  `model_hi`counter_depvar'' = `temp_hi'
+					}
+					else { //additional by-vars go in as columns
+						matrix  `model_x`counter_depvar''  = `model_x`counter_depvar'' , `temp_x' 
+						matrix  `model_lo`counter_depvar'' = `model_lo`counter_depvar'', `temp_lo'
+						matrix  `model_hi`counter_depvar'' = `model_hi`counter_depvar'', `temp_hi'	
+					}
+				}
+
 			}
 		}
 	}
+
+	*** PLOT MODEL CONFIDENCE INTERVALS
+	if `model_ci' {
+
+		local fit_cis 
+		local c=0
 	
+		* LOOP over by-vars
+		local counter_by=0
+		if ("`by'"=="") local noby="noby"
+		foreach byval in `byvals' `noby' {	
+			local ++counter_by
+
+			local counter_depvar = 0
+
+			foreach depvar of varlist `y_vars' {
+			local ++counter_depvar
+			local ++c
+
+			local row = 1
+			local col = `counter_by'
+
+			local plot_m_hi (scatteri
+			local plot_m_lo (scatteri
+
+			while !missing(`model_x`counter_depvar''[`row',`col'], `model_lo`counter_depvar''[`row',`col'], `model_hi`counter_depvar''[`row',`col'] ){
+					
+				local plot_m_hi `plot_m_hi' `=`model_hi`counter_depvar''[`row',`col']' `=`model_x`counter_depvar''[`row',`col']' 
+				local plot_m_lo `plot_m_lo' `=`model_lo`counter_depvar''[`row',`col']' `=`model_x`counter_depvar''[`row',`col']' 
+
+				local ++row 
+			}
+
+			if `"`lcolors'"'==`""' {
+				if (`ynum'==1 & `bynum'==1 & "`linetype'"!="connect") local lcolors `: word 2 of `colors''
+				else local lcolors `colors'
+			}
+			
+			pause 
+			local plot_m_hi `plot_m_hi' , lcolor(`: word `c' of `lcolors'') lpattern(dash) recast(line))
+			local plot_m_lo `plot_m_lo' , lcolor(`: word `c' of `lcolors'') lpattern(dash) recast(line))
+
+			local fit_cis `fit_cis' `plot_m_hi' `plot_m_lo'
+			}
+		}
+	}
+
 	* Prepare y-axis title
 	if (`ynum'==1) local ytitle `y_vars'
 	else if (`ynum'==2) local ytitle : subinstr local y_vars " " " and "
@@ -708,7 +845,7 @@ program define binscatter, eclass sortpreserve
 	* Display graph
 	/* only plot cis if specified */
 	/** MORE FLEXIBLE VERSION **/
-	if  "`plot_ci'" != "" {
+	if  `bin_ci' {
 		preserve 
 		clear 
 		local counter_depvar= 0 
@@ -718,8 +855,8 @@ program define binscatter, eclass sortpreserve
 
 		foreach v in `y_vars' {
 			local ++counter_depvar
-			svmat `y`counter_depvar'_loci', names("y`counter_depvar'_lo")
-			svmat `y`counter_depvar'_hici',  names("y`counter_depvar'_hi")
+			qui: svmat `y`counter_depvar'_loci', names("y`counter_depvar'_lo")
+			qui: svmat `y`counter_depvar'_hici',  names("y`counter_depvar'_hi")
 			
 			local by_index = 1
 
@@ -733,7 +870,7 @@ program define binscatter, eclass sortpreserve
 				local ++by_index 
 			}
 		}
-		local graphcmd twoway `cis' `scatters' `fits', graphregion(fcolor(white)) `xlines' xtitle(`x_var') ytitle(`ytitle') legend(`legend_labels' order(`order')) `options'
+		local graphcmd twoway `cis' `scatters' `fits' `fit_cis', graphregion(fcolor(white)) `xlines' xtitle(`x_var') ytitle(`ytitle') legend(`legend_labels' order(`order')) `options'
 		`graphcmd'
 
 		
@@ -741,8 +878,7 @@ program define binscatter, eclass sortpreserve
 		 
 	}
 	else {
-	local cis 
-	local graphcmd twoway `scatters' `fits', graphregion(fcolor(white)) `xlines' xtitle(`x_var') ytitle(`ytitle') legend(`legend_labels' order(`order')) `options'
+	local graphcmd twoway `scatters' `fits'  `fit_cis', graphregion(fcolor(white)) `xlines' xtitle(`x_var') ytitle(`ytitle') legend(`legend_labels' order(`order')) `options'
 	if ("`savedata'"!="") local savedata_graphcmd twoway `savedata_scatters' `fits', graphregion(fcolor(white)) `xlines' xtitle(`x_var') ytitle(`ytitle') legend(`legend_labels' order(`order')) `options'
 	`graphcmd'
 	}
@@ -882,13 +1018,65 @@ end
 
 
 **********************************
-
 * Helper programs
+
+program define model_bounds, rclass
+	version 15.1
+
+	syntax, COV(passthru) Means(passthru) seed(passthru) x_range(numlist max=2 min=2 ascending) [qfit lfit x_obs(integer 100)]
+
+	local n_draws = 100000
+
+	if "`lfit'" != "" local coefs "b1 b0"
+	else if "`qfit'" != "" local coefs "b2 b1 b0"
+	else {
+		di as error "Please select qfit or lfit in model_bounds"
+		exit
+	}
+
+	gettoken x_min x_max: (local) x_range
+	local x_step = (`x_max' - `x_min')/`x_obs'
+
+	preserve 
+
+	qui: drawnorm `coefs', `means' `cov' n(`n_draws') `seed' clear 
+	tempvar yhat 
+	local row = 1
+	
+	local x_i = `x_min'
+	forvalues i = 1/`x_obs' {
+		
+		if "`lfit'" != "" gen `yhat' = b1*`x_i' + b0
+		else /* if qfit */ gen `yhat' = b2*`x_i'*`x_i' + b1*`x_i' + b0
+
+		_pctile `yhat', p(2.5, 97.5)
+
+		if `row' == 1{ 	
+			matrix model_x = `x_i'
+			matrix model_lo = `r(r1)'
+			matrix model_hi = `r(r2)'
+		} 
+		else {
+			matrix model_x = model_x \ `x_i'
+			matrix model_lo = model_lo \ `r(r1)'
+			matrix model_hi = model_hi \ `r(r2)'
+		}
+		local ++row
+		local x_i = `x_i' + `x_step'
+		drop `yhat'
+	} 
+	
+
+	return clear 
+	return matrix model_x = model_x
+	return matrix model_lo = model_lo
+	return matrix model_hi = model_hi
+end 
 
 program define means_in_boundaries, rclass
 	version 12.1
 
-	syntax varname(numeric) [aweight fweight], BOUNDsmat(name) [MEDians]
+	syntax varname(numeric) [aweight fweight], BOUNDsmat(name) [MEDians vce(passthru)]
 	
 	* Create convenient weight local
 	if ("`weight'"!="") local wt [`weight'`exp']
@@ -900,7 +1088,7 @@ program define means_in_boundaries, rclass
 
 	if ("`medians'"!="medians") {
 		forvalues i=1/`r' {
-			qui: reg `varlist' in `=`boundsmat'[`i',1]'/`=`boundsmat'[`i',2]' `wt', robust
+			qui: reg `varlist' in `=`boundsmat'[`i',1]'/`=`boundsmat'[`i',2]' `wt'
 			matrix means[`i',1]	= 	_b[_cons]
 			matrix loci[`i',1]	=	_b[_cons]	-1.96 * _se[_cons]
 			matrix hici[`i',1]	= 	_b[_cons]	+1.96 * _se[_cons]
@@ -908,7 +1096,11 @@ program define means_in_boundaries, rclass
 	}
 	else {
 		forvalues i=1/`r' {
-			bsqreg `varlist'  in `=`boundsmat'[`i',1]'/`=`boundsmat'[`i',2]' `wt'
+			cap: qreg `varlist'  in `=`boundsmat'[`i',1]'/`=`boundsmat'[`i',2]' `wt', `vce'
+			if _rc != 0 { 
+				di as text "Error in " as input "qreg" as text ": Trying bsqreg. "
+				qui: bsqreg `varlist'  in `=`boundsmat'[`i',1]'/`=`boundsmat'[`i',2]' `wt'
+			}
 			matrix means[`i',1]	= 	_b[_cons]
 			matrix loci[`i',1]	=	_b[_cons]  -1.96 * _se[_cons]
 			matrix hici[`i',1]	= 	_b[_cons]  +1.96 * _se[_cons]
@@ -1141,3 +1333,5 @@ void characterize_unique_vals_sorted(string scalar var, real scalar first, real 
 }
 
 end
+
+ 
