@@ -67,8 +67,18 @@ Ok - what exactly do these confidence intervals represent? Why aren't the bounds
 
 to write: 
 
-these minimize (maximize) $\hat{y}$ along the manifold given by the constraint function $CDF(\beta) = 0.025$ ($CDF(\beta) = 0.0975$)
+these minimize (maximize)
+<a href="https://www.codecogs.com/eqnedit.php?latex=\hat{y}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\hat{y}" title="\hat{y}" /></a>
+along the manifold given by the constraint function
+<a href="https://www.codecogs.com/eqnedit.php?latex=$CDF(\beta)&space;=&space;0.025$" target="_blank"><img src="https://latex.codecogs.com/gif.latex?$CDF(\beta)&space;=&space;0.025$" title="$CDF(\beta) = 0.025$" /></a>
+<a href="https://www.codecogs.com/eqnedit.php?latex=($CDF(\beta)&space;=&space;0.0975)$" target="_blank"><img src="https://latex.codecogs.com/gif.latex?($CDF(\beta)&space;=&space;0.0975)$" title="($CDF(\beta) = 0.0975)$" /></a>
 
 rather, we numerically approximate this. 
 
-in this way, in the linear case, the constraint is in terms of $\beta=[\beta_0 \beta_1]^T$; in the quadratic case $\beta=[\beta_0 \beta_1 \beta_2]^T$
+in this way, in the linear case, the constraint is in terms of <a href="https://www.codecogs.com/eqnedit.php?latex=$\beta=[\beta_0~\beta_1]^T$" target="_blank"><img src="https://latex.codecogs.com/gif.latex?$\beta=[\beta_0~\beta_1]^T$" title="$\beta=[\beta_0~\beta_1]^T$" /></a>
+; in the quadratic case 
+<a href="https://www.codecogs.com/eqnedit.php?latex=$\beta=[\beta_0~\beta_1~\beta_2]^T$" target="_blank"><img src="https://latex.codecogs.com/gif.latex?$\beta=[\beta_0~\beta_1~\beta_2]^T$" title="$\beta=[\beta_0~\beta_1~\beta_2]^T$" /></a>
+
+
+--- 
+in line <a href="https://www.codecogs.com/eqnedit.php?latex=\LaTeX" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\LaTeX" title="\LaTeX" /></a> compiled externally by [codecogs](https://www.codecogs.com/)
