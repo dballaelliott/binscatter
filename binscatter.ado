@@ -1,4 +1,4 @@
-*!forked version 1.0 21jan2020  Dylan Balla-Elliott, dballaelliott@hbs.edu
+*!forked version 1.01 23jan2020  Dylan Balla-Elliott, dballaelliott@hbs.edu
 
 *!forked from: version 7.02  24nov2013  Michael Stepner, stepner@mit.edu
 
@@ -29,8 +29,6 @@ program define binscatter, eclass sortpreserve
 
 	set more off
 
-	/* !flag */
-	di as error "FORKED VERSION"
 	// local env_seed = c(seed)
 	local bin_seed = 20021380
 

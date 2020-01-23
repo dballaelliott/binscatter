@@ -13,8 +13,62 @@ Technically, both options can be selected at the same time (though this doesn't 
 
 ### ci(bins)
 
-more info and examples coming soon... 
+```stata
+sysuse auto, clear 
+binscatter price mpg, ci(bins) linetype(none)
+```
+
+![Example Figures: Many Bins](img/bins1.svg "Example Figure: Too Many Bins")
+
+This helps to highlight the implicit bias-variance tradeoff that `binscatter` shares with other non-parametric conditional means estimators. 
+
+```stata
+sysuse auto, clear 
+binscatter price mpg, ci(bins) linetype(none) n(5)
+```
+
+![Example Figures:  (Maybe) Too Few Bins](img/bins2.svg "Example Figure: (Maybe) Too Few Bins")
+
+Aesthetically, this can look quite nice when we add `linetype(connect)`
+
+```stata
+binscatter price mpg, ci(bins) linetype(connect) n(5)
+```
+
+![Example Figures: Connecting the Dots](img/bins3.svg "Example Figure: Connecting the Dots")
 
 ### ci(model)
 
-more info and examples coming soon..
+The `ci()` option class also provides an option to bound linear and quadratic fits.
+
+The syntax is exactly the same in either case; `binscatter` knows to bound the appropriate model type, whether it is linear...
+
+```stata
+binscatter price mpg, ci(model) linetype(lfit)
+```
+
+![Example Figure: Linear Fit](img/lfit1.svg "Example Figure: Linear Fit")
+
+or quadratic.... 
+
+```stata
+binscatter price mpg, ci(model) linetype(qfit)
+```
+
+![Example Figure: Quadratic Fit](img/qfit1.svg "Example Figure: Quadratic Fit")
+
+Technically, these options can be specified together, but it often leads to a crowded figure...
+
+![Example Figure: Too Much!](img/lfit2.svg "Example Figure: Too Much!")
+
+### Comments
+
+Ok - what exactly do these confidence intervals represent? Why aren't the bounds on the linear fit also linear? 
+
+to write: 
+
+these minimize (maximize) $\hat{y}$ along the manifold given by the constraint function $CDF(\beta) = 0.025$ ($CDF(\beta) = 0.0975$)
+
+rather, we numerically approximate this. 
+
+in this way, in the linear case, the constraint is in terms of $\beta=[\beta_0 \beta_1]^T$; in the quadratic case $\beta=[\beta_0 \beta_1 \beta_2]^T$
