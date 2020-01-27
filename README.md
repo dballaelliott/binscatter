@@ -68,7 +68,7 @@ Ok - what exactly do these confidence intervals represent? Why aren't the bounds
 to write: 
 
 these minimize (maximize)
-<a href="https://www.codecogs.com/eqnedit.php?latex=\hat{y}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\hat{y}" title="\hat{y}" /></a>
+<a href="https://www.codecogs.com/eqnedit.php?latex=\hat{y}(x)" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\hat{y}(x)" title="\hat{y}(x)" /></a>
 along the manifold given by the constraint function
 <a href="https://www.codecogs.com/eqnedit.php?latex=$CDF(\beta)&space;=&space;0.025$" target="_blank"><img src="https://latex.codecogs.com/gif.latex?$CDF(\beta)&space;=&space;0.025$" title="$CDF(\beta) = 0.025$" /></a>
 <a href="https://www.codecogs.com/eqnedit.php?latex=($CDF(\beta)&space;=&space;0.0975)$" target="_blank"><img src="https://latex.codecogs.com/gif.latex?($CDF(\beta)&space;=&space;0.0975)$" title="($CDF(\beta) = 0.0975)$" /></a>
