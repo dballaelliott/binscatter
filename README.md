@@ -18,6 +18,12 @@ Install from within stata
 
 OR 2. Download/clone/fork this repo
 
+### Dependencies
+
+This program uses `reghdfe` to allow for extended `vce` options for standard errors.
+
+`ssc install reghdfe`
+
 ### ci(bins)
 
 ```stata
