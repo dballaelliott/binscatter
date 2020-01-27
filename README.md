@@ -14,7 +14,7 @@ Technically, both options can be selected at the same time (though this doesn't 
 ## Install
 Install from within stata
 
-`net install esplot, from("https://raw.githubusercontent.com/dballaelliott/binscatter/master/") replace`
+`net install binscatter, from("https://raw.githubusercontent.com/dballaelliott/binscatter/master/") replace`
 
 OR 2. Download/clone/fork this repo
 
