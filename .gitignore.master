@@ -1,9 +1,0 @@
-tests/
-test.do
-binscatter.log
-*.png
-
-# exclude net install files
-binscatter.pkg 
-stata.toc
-LICENSE_cc0_fulltext

@@ -7,3 +7,6 @@ binscatter.log
 binscatter.pkg 
 stata.toc
 LICENSE_cc0_fulltext
+
+# .gitignore files 
+.gitignore.*
