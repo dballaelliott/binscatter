@@ -3,3 +3,5 @@ test.do
 binscatter.log
 *.png
 
+# exclude gitignores
+.gitignore.*
