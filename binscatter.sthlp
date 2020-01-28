@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 7.02  24nov2013}{...}
+{* *! version forked-1.01  27jan2020}{...}
 {viewerjumpto "Syntax" "binscatter##syntax"}{...}
 {viewerjumpto "Description" "binscatter##description"}{...}
 {viewerjumpto "Options" "binscatter##options"}{...}
@@ -33,7 +33,8 @@ where {it:varlist} is
 {synoptline}
 {syntab :Main}
 {synopt :{opth by(varname)}}plot separate series for each group (see {help binscatter##by_notes:important notes below}){p_end}
-{synopt :{opt med:ians}}plot within-bin medians instead of means{p_end}
+{synopt :{opt med:ians}} use medians instead of means for y-means and fit line {p_end}
+{synopt :{opt ci((binscatter##ci_opts:ciopts))}} display confidence intervals for y-means [ci(bins)] or the fit [ci(model)] {p_end}
 
 {syntab :Bins}
 {synopt :{opth n:quantiles(#)}}number of equal-sized bins to be created; default is {bf:20}{p_end}

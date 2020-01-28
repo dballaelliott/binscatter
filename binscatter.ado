@@ -303,9 +303,15 @@ program define binscatter, eclass sortpreserve
 					}
 					
 					* perform regression
-					if ("`reg_verbosity'"=="quietly") capture reghdfe `depvar' `x_r2' `x_r' `wt' if `conds', `vce' noabsorb
-					else capture noisily reghdfe `depvar' `x_r2' `x_r' `wt' if `conds', `vce' noabsorb
+					local reg_cmd reghdfe 
+					if "`medians'" != "" local reg_cmd bsqreg
+					else /* if it's not a median regression, add in the no absorb option */ local noabsorb noabsorb
+
+					if ("`reg_verbosity'"=="quietly") capture `reg_cmd' `depvar' `x_r2' `x_r' `wt' if `conds', `vce' `noabsorb'
+					else capture noisily `reg_cmd' `depvar' `x_r2' `x_r' `wt' if `conds', `vce' `noabsorb'
 					
+					pause 
+
 					* store results
 					if (_rc==0){
 						matrix e_b_temp=e(b)

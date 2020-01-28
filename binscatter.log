@@ -1,0 +1,59 @@
+--------------------------------------------------------------------------------------------------------------------------------------
+      name:  binscatter_main
+       log:  C:\Users\dballaelliott\Documents\dev\binscatter\binscatter.log
+  log type:  text
+ opened on:  27 Jan 2020, 16:26:06
+
+. 
+. binscatter price mpg, ci(model bins) linetype(lfit) by(foreign) n(4) median reportreg 
+--------------------------------------------------------------------------------------------------------------------------------------
+-> foreign = Domestic
+(MWFE estimator converged in 1 iterations)
+
+HDFE Linear regression                            Number of obs   =         52
+Absorbing 1 HDFE group                            F(   1,     50) =      17.05
+                                                  Prob > F        =     0.0001
+                                                  R-squared       =     0.2543
+                                                  Adj R-squared   =     0.2394
+                                                  Within R-sq.    =     0.2543
+                                                  Root MSE        =  2701.1177
+
+------------------------------------------------------------------------------
+       price |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+         mpg |  -329.2551   79.74034    -4.13   0.000    -489.4183   -169.0919
+       _cons |   12600.54   1624.773     7.76   0.000     9337.085    15863.99
+------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------
+-> foreign = Foreign
+(MWFE estimator converged in 1 iterations)
+
+HDFE Linear regression                            Number of obs   =         22
+Absorbing 1 HDFE group                            F(   1,     20) =      13.25
+                                                  Prob > F        =     0.0016
+                                                  R-squared       =     0.3985
+                                                  Adj R-squared   =     0.3685
+                                                  Within R-sq.    =     0.3985
+                                                  Root MSE        =  2083.6059
+
+------------------------------------------------------------------------------
+       price |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+         mpg |  -250.3668   68.77435    -3.64   0.002    -393.8276    -106.906
+       _cons |   12586.95   1760.689     7.15   0.000     8914.217    16259.68
+------------------------------------------------------------------------------
+Error in qreg: Trying bsqreg. 
+xxError in qreg: Trying bsqreg. 
+Error in qreg: Trying bsqreg. 
+xError in qreg: Trying bsqreg. 
+Error in qreg: Trying bsqreg. 
+Error in qreg: Trying bsqreg. 
+
+. 
+. /* set trace off  */
+. log close binscatter_main
+      name:  binscatter_main
+       log:  C:\Users\dballaelliott\Documents\dev\binscatter\binscatter.log
+  log type:  text
+ closed on:  27 Jan 2020, 16:26:21
+--------------------------------------------------------------------------------------------------------------------------------------
