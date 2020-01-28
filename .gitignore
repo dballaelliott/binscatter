@@ -1,0 +1,10 @@
+v fork-1.01
+
+d binscatter - confidence interval fork
+d 
+d binscatter by Michael Stepner (stepner@mit.edu)
+d
+d + confidence interval support 
+d + Dylan Balla-Elliott (dballaelliott@hbs.edu)
+
+p binscatter module to generate binned scatterplots with confidence intervals
