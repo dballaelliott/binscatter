@@ -684,10 +684,6 @@ program define binscatter, eclass sortpreserve
 		if ("`rd'"=="") matrix `fitline_bounds'=.,.
 		else matrix `fitline_bounds'=.,`=subinstr("`rd'"," ",",",.)',.
 
-		forvalues i = 1/`ynum'{
-			tempname model_x`i' model_lo`i' model_hi`i'
-		}
-
 		* LOOP over by-vars
 		local counter_by=0
 		if ("`by'"=="") local noby="noby"
@@ -758,85 +754,35 @@ program define binscatter, eclass sortpreserve
 
 							model_bounds, cov(`vcv') means(`coefs') seed(`bin_seed') x_range(`leftbound' `rightbound') x_obs(`xobs') `=trim("`linetype'")'
 							
-							if `counter_rd' == 1{
-								matrix `temp_x'  = r(model_x)
-								matrix `temp_lo' = r(model_lo)
-								matrix `temp_hi' = r(model_hi)
-							}
-							else { // append them to bottom (make a long column)
-								matrix `temp_x'  = `temp_x' \ r(model_x)
-								matrix `temp_lo' = `temp_lo' \ r(model_lo)
-								matrix `temp_hi' = `temp_hi' \ r(model_hi)
+							local row = 1 
+
+							matrix `temp_x'  = r(model_x)
+							matrix `temp_lo' = r(model_lo)
+							matrix `temp_hi' = r(model_hi)
+							
+							local plot_m_hi (scatteri
+							local plot_m_lo (scatteri
+							/* we got these matrices, now we can plot them... */
+							while !missing(`temp_x'[`row',1], `temp_lo'[`row',1], `temp_hi'[`row',1] ){
+								
+								local plot_m_hi `plot_m_hi' `=`temp_hi'[`row',1]' `=`temp_x'[`row',1]' 
+								local plot_m_lo `plot_m_lo' `=`temp_lo'[`row',1]' `=`temp_x'[`row',1]' 
+
+								local ++row 
 							}
 
+							local plot_m_hi `plot_m_hi' , lcolor(`: word `c' of `lcolors'') lpattern(dash) recast(line))
+							local plot_m_lo `plot_m_lo' , lcolor(`: word `c' of `lcolors'') lpattern(dash) recast(line))
+
+							local fit_cis `fit_cis' `plot_m_hi' `plot_m_lo'
 
 						}
-						
 					
 						local fits `fits' (function `coef_quad'*x^2+`coef_lin'*x+`coef_cons', range(`leftbound' `rightbound') lcolor(`: word `c' of `lcolors''))
 					}
 
 				}
 
-				if `model_ci'{
-					if `counter_by' == 1 {
-						matrix  `model_x`counter_depvar''  = `temp_x' 
-						matrix  `model_lo`counter_depvar'' = `temp_lo'
-						matrix  `model_hi`counter_depvar'' = `temp_hi'
-					}
-					else { //additional by-vars go in as columns
-						matrix  `model_x`counter_depvar''  = `model_x`counter_depvar'' , `temp_x' 
-						matrix  `model_lo`counter_depvar'' = `model_lo`counter_depvar'', `temp_lo'
-						matrix  `model_hi`counter_depvar'' = `model_hi`counter_depvar'', `temp_hi'	
-					}
-				}
-
-			}
-		}
-	}
-
-	*** PLOT MODEL CONFIDENCE INTERVALS
-	if `model_ci' {
-
-		local fit_cis 
-		local c=0
-	
-		* LOOP over by-vars
-		local counter_by=0
-		if ("`by'"=="") local noby="noby"
-		foreach byval in `byvals' `noby' {	
-			local ++counter_by
-
-			local counter_depvar = 0
-
-			foreach depvar of varlist `y_vars' {
-			local ++counter_depvar
-			local ++c
-
-			local row = 1
-			local col = `counter_by'
-
-			local plot_m_hi (scatteri
-			local plot_m_lo (scatteri
-
-			while !missing(`model_x`counter_depvar''[`row',`col'], `model_lo`counter_depvar''[`row',`col'], `model_hi`counter_depvar''[`row',`col'] ){
-					
-				local plot_m_hi `plot_m_hi' `=`model_hi`counter_depvar''[`row',`col']' `=`model_x`counter_depvar''[`row',`col']' 
-				local plot_m_lo `plot_m_lo' `=`model_lo`counter_depvar''[`row',`col']' `=`model_x`counter_depvar''[`row',`col']' 
-
-				local ++row 
-			}
-
-			if `"`lcolors'"'==`""' {
-				if (`ynum'==1 & `bynum'==1 & "`linetype'"!="connect") local lcolors `: word 2 of `colors''
-				else local lcolors `colors'
-			}
-			
-			pause 
-			local plot_m_hi `plot_m_hi' , lcolor(`: word `c' of `lcolors'') lpattern(dash) recast(line))
-			local plot_m_lo `plot_m_lo' , lcolor(`: word `c' of `lcolors'') lpattern(dash) recast(line))
-
-			local fit_cis `fit_cis' `plot_m_hi' `plot_m_lo'
 			}
 		}
 	}

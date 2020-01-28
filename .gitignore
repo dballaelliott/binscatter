@@ -8,5 +8,5 @@ binscatter.pkg
 stata.toc
 LICENSE_cc0_fulltext
 
-# .gitignore files 
+# exclude gitignores
 .gitignore.*
