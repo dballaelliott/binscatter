@@ -1,4 +1,5 @@
 tests/
 test.do
 binscatter.log
-rcap.png
+*.png
+
