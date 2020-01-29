@@ -33,7 +33,7 @@ binscatter price mpg, ci(bins) linetype(none)
 
 ![Example Figures: Many Bins](img/bins1.svg "Example Figure: Too Many Bins")
 
-This helps to highlight the implicit bias-variance tradeoff that `binscatter` shares with other non-parametric conditional means estimators. 
+This helps to highlight the bias-variance tradeoff that `binscatter` shares with other non-parametric conditional means estimators, 
 
 ```stata
 sysuse auto, clear 
