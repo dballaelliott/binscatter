@@ -72,25 +72,11 @@ binscatter price mpg, ci(model) linetype(qfit)
 
 Technically, these options can be specified together, but it often leads to a crowded figure...
 
+```stata
+binscatter price mpg, ci(model bins) linetype(lfit)
+```
+
 ![Example Figure: Too Much!](img/lfit2.svg "Example Figure: Too Much!")
-
-### Comments
-
-Ok - what exactly do these confidence intervals represent? Why aren't the bounds on the linear fit also linear? 
-
-to write: 
-
-these minimize (maximize)
-<a href="https://www.codecogs.com/eqnedit.php?latex=\hat{y}(x)" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\hat{y}(x)" title="\hat{y}(x)" /></a>
-along the manifold given by the constraint function
-<a href="https://www.codecogs.com/eqnedit.php?latex=$CDF(\beta)&space;=&space;0.025$" target="_blank"><img src="https://latex.codecogs.com/gif.latex?$CDF(\beta)&space;=&space;0.025$" title="$CDF(\beta) = 0.025$" /></a>
-<a href="https://www.codecogs.com/eqnedit.php?latex=($CDF(\beta)&space;=&space;0.0975)$" target="_blank"><img src="https://latex.codecogs.com/gif.latex?($CDF(\beta)&space;=&space;0.0975)$" title="($CDF(\beta) = 0.0975)$" /></a>
-
-rather, we numerically approximate this. 
-
-in this way, in the linear case, the constraint is in terms of <a href="https://www.codecogs.com/eqnedit.php?latex=$\beta=[\beta_0~\beta_1]^T$" target="_blank"><img src="https://latex.codecogs.com/gif.latex?$\beta=[\beta_0~\beta_1]^T$" title="$\beta=[\beta_0~\beta_1]^T$" /></a>
-; in the quadratic case 
-<a href="https://www.codecogs.com/eqnedit.php?latex=$\beta=[\beta_0~\beta_1~\beta_2]^T$" target="_blank"><img src="https://latex.codecogs.com/gif.latex?$\beta=[\beta_0~\beta_1~\beta_2]^T$" title="$\beta=[\beta_0~\beta_1~\beta_2]^T$" /></a>
 
 ### Coming Soon... 
 
