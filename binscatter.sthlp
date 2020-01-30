@@ -34,7 +34,7 @@ where {it:varlist} is
 {syntab :Main}
 {synopt :{opth by(varname)}}plot separate series for each group (see {help binscatter##by_notes:important notes below}){p_end}
 {synopt :{opt med:ians}} use medians instead of means for y-means and fit line {p_end}
-{synopt :{opth ci(ciopts)}} display confidence intervals for y-means {bf:bins} or the fit {bf:model} {p_end}
+{synopt :{opt ci({it:ci_type})}} display confidence intervals for y-means {bf:ci(bins)} or the fit {bf:ci(model)} or both {bf:ci(model bins)} {p_end}
 
 {syntab :Bins}
 {synopt :{opth n:quantiles(#)}}number of equal-sized bins to be created; default is {bf:20}{p_end}
@@ -120,7 +120,7 @@ by-value), you can construct a variable containing your desired bins beforehand,
 {phang}{opt med:ians} creates the binned scatterplot using the median x- and y-value within each bin, rather than the mean.
 This option only affects the scatter points; it does not, for instance, cause {opt linetype(lfit)}
 to use quantile regression instead of OLS when drawing a fit line.
-
+binscatter##ci_opts
 {dlgtab:Bins}
 
 {phang}{opth n:quantiles(#)} specifies the number of equal-sized bins to be created.  This is equivalent to the number of
