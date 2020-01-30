@@ -39,3 +39,4 @@ d Support: email stepner@mit.edu
 d + confidence interval suboptions: email dballaelliott@hbs.edu
 d 
 f binscatter.ado
+f binscatter.sthlp
