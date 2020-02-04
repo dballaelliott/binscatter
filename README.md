@@ -26,7 +26,7 @@ This program uses `reghdfe` to allow for extended `vce` options for standard err
 
 ### ci(model)
 
-The `ci()` option class also provides an option to bound linear and quadratic fits.
+The `ci()` option class provides a suboption to bound linear and quadratic fits.
 
 The syntax is exactly the same in either case; `binscatter` knows to bound the appropriate model type, whether it is linear...
 
@@ -45,6 +45,9 @@ binscatter price mpg, ci(model) linetype(qfit)
 ![Example Figure: Quadratic Fit](img/qfit1.svg "Example Figure: Quadratic Fit")
 
 ### ci(bins)
+
+The ci() option class also provides an option to bound the binned y-means.
+
 
 ```stata
 sysuse auto, clear 
