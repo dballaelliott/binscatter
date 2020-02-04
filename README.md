@@ -24,6 +24,26 @@ This program uses `reghdfe` to allow for extended `vce` options for standard err
 
 `ssc install reghdfe`
 
+### ci(model)
+
+The `ci()` option class also provides an option to bound linear and quadratic fits.
+
+The syntax is exactly the same in either case; `binscatter` knows to bound the appropriate model type, whether it is linear...
+
+```stata
+binscatter price mpg, ci(model) linetype(lfit)
+```
+
+![Example Figure: Linear Fit](img/lfit1.svg "Example Figure: Linear Fit")
+
+or quadratic.... 
+
+```stata
+binscatter price mpg, ci(model) linetype(qfit)
+```
+
+![Example Figure: Quadratic Fit](img/qfit1.svg "Example Figure: Quadratic Fit")
+
 ### ci(bins)
 
 ```stata
@@ -50,26 +70,6 @@ binscatter price mpg, ci(bins) linetype(connect) n(5)
 
 ![Example Figures: Connecting the Dots](img/bins3.svg "Example Figure: Connecting the Dots")
 
-### ci(model)
-
-The `ci()` option class also provides an option to bound linear and quadratic fits.
-
-The syntax is exactly the same in either case; `binscatter` knows to bound the appropriate model type, whether it is linear...
-
-```stata
-binscatter price mpg, ci(model) linetype(lfit)
-```
-
-![Example Figure: Linear Fit](img/lfit1.svg "Example Figure: Linear Fit")
-
-or quadratic.... 
-
-```stata
-binscatter price mpg, ci(model) linetype(qfit)
-```
-
-![Example Figure: Quadratic Fit](img/qfit1.svg "Example Figure: Quadratic Fit")
-
 Technically, these options can be specified together, but it often leads to a crowded figure...
 
 ```stata
@@ -80,7 +80,7 @@ binscatter price mpg, ci(model bins) linetype(lfit)
 
 ### Coming Soon... 
 
-An updated version of the stata help file so that the internal documentation provided by `help binscatter` includes documentation for the `ci()` option. 
+- [x] Installing via `net install` also updates the stata help file so that the internal documentation provided by `help binscatter` includes documentation for the `ci()` option. 
 
 --- 
 in line <a href="https://www.codecogs.com/eqnedit.php?latex=\LaTeX" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\LaTeX" title="\LaTeX" /></a> compiled externally by [codecogs](https://www.codecogs.com/)
