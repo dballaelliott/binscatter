@@ -81,7 +81,11 @@ binscatter price mpg, ci(model bins) linetype(lfit)
 
 ![Example Figure: Too Much!](img/lfit2.svg "Example Figure: Too Much!")
 
-### Coming Soon... 
+### Changelog/ Coming Soon... 
+ 
+- [ ] [Alternative implementation](https://github.com/dballaelliott/binscatter/issues/4) of `ci(bins)` that doesn't rely on tranparency for backwards compatability with versions before Stata 15.0.
+
+- [x] **Quality of life update to `ci(model)`** The option `n_draws()` is now available. This takes an integer argument, and can be used to set the number of draws from the bivariate normal distribution that are used to approximate the confidence bands on the model (more precisely, the bounds on y-hat). The default is 100,000. 
 
 - [x] Installing via `net install` also updates the stata help file so that the internal documentation provided by `help binscatter` includes documentation for the `ci()` option. 
 
