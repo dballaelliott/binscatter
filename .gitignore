@@ -5,3 +5,4 @@ binscatter.log
 
 # exclude gitignores
 .gitignore.*
+binscatter.log 

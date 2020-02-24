@@ -25,6 +25,7 @@ program define binscatter, eclass sortpreserve
 		nofastxtile randvar(varname numeric) randcut(real 1) randn(integer -1) ///
 		/* LEGACY OPTIONS */ nbins(integer 20) create_xq x_q(varname numeric) ///
 		 symbols(string) method(string) unique(string) ci(string asis) vce(passthru) ///
+		n_draws(passthru) ///
 		*]
 
 	set more off
@@ -151,9 +152,14 @@ program define binscatter, eclass sortpreserve
 		}
 	}
 
-	/* use version 15.1 if we need to plot with transparency */
-	if "`ci'" != "" version 15.0  
-
+	/* use version 15 if we need to plot with transparency */
+	if `bin_ci' {
+		cap: version 15.0  
+		if _rc != 0{
+			di as error "Stata 15 needed to plot with transparency; cannot plot confidence bans for binned y-means."
+			local bin_ci 0 
+		}
+	} 
 	* Mark sample (reflects the if/in conditions, and includes only nonmissing observations)
 	marksample touse
 	markout `touse' `by' `xq' `controls' `absorb', strok
@@ -756,7 +762,7 @@ program define binscatter, eclass sortpreserve
 								mat `vcv' = `y`counter_depvar'_vcv'[`vcv0'..`=`vcv0'+2',1],`y`counter_depvar'_vcv'[`vcv0'..`=`vcv0'+2',2],`y`counter_depvar'_vcv'[`vcv0'..`=`vcv0'+2',3]
 							}
 
-							model_bounds, cov(`vcv') means(`coefs') seed(`bin_seed') x_range(`leftbound' `rightbound') x_obs(`xobs') `=trim("`linetype'")'
+							model_bounds, cov(`vcv') means(`coefs') seed(`bin_seed') x_range(`leftbound' `rightbound') x_obs(`xobs') `=trim("`linetype'")' `n_draws'
 							
 							if `counter_rd' == 1{
 								matrix `temp_x'  = r(model_x)
@@ -1025,11 +1031,9 @@ end
 * Helper programs
 
 program define model_bounds, rclass
-	version 15.1
+	version 12.1
 
-	syntax, COV(passthru) Means(passthru) seed(passthru) x_range(numlist max=2 min=2 ascending) [qfit lfit x_obs(integer 100)]
-
-	local n_draws = 100000
+	syntax, COV(passthru) Means(passthru) seed(passthru) x_range(numlist max=2 min=2 ascending) [qfit lfit x_obs(integer 100) n_draws(integer 100000)] 
 
 	if "`lfit'" != "" local coefs "b1 b0"
 	else if "`qfit'" != "" local coefs "b2 b1 b0"

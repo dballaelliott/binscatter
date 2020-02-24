@@ -1,4 +1,4 @@
-v fork-1.01
+v fork-1.02
 
 d binscatter - confidence interval fork
 d 

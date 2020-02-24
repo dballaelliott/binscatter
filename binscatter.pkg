@@ -1,4 +1,4 @@
-v fork-1.01
+v fork-1.02
 d 
 d 'BINSCATTER':  - confidence interval fork
 d 
@@ -29,9 +29,9 @@ d KW: scatterplot
 d KW: data description
 d KW: regression discontinuity
 d
-d Requires: Stata version 15.1
+d Requires: Stata version 12.1
 d
-d Distribution-Date: 27jan 2020
+d Distribution-Date: 23feb 2020
 d
 d Author: Michael Stepner 
 d + confidence intervals: Dylan Balla-Elliott

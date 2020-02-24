@@ -1,5 +1,5 @@
 {smcl}
-{* *! version forked-1.01  27jan2020}{...}
+{* *! version fork-1.02  23feb2020}{...}
 {viewerjumpto "Syntax" "binscatter##syntax"}{...}
 {viewerjumpto "Description" "binscatter##description"}{...}
 {viewerjumpto "Options" "binscatter##options"}{...}
